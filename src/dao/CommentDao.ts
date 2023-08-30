@@ -17,10 +17,17 @@ class CommentDAO {
         return await Comment.findByPk(id);
     }
 
+    async isOwner(commentId: number, userId: number): Promise<boolean> {
+        const comment = await this.getById(commentId);
+        return comment?.userId === userId;
+    }
+
     async getCommentsByPostId(postId: number): Promise<Comment[]> {
         return await Comment.findAll({
             where: { postId },
-            include: [{ model: User, as: 'user' }] //  informasi user yang mengomentari
+            include: [{ model: User,
+            as: 'user',
+            attributes: ['id', 'username', 'email', 'role'] }] //  informasi user yang mengomentari
         });
     }
 

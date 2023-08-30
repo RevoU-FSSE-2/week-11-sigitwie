@@ -6,7 +6,7 @@ export interface CommentAttributes {
     id?: number;
     userId: number;
     postId: number;
-    text: string;
+    content: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -15,7 +15,7 @@ export class Comment extends Model<CommentAttributes> implements CommentAttribut
     public id?: number;
     public userId!: number;
     public postId!: number;
-    public text!: string;
+    public content!: string;
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 }
@@ -43,7 +43,7 @@ export const CommentFactory = (sequelize: Sequelize) => {
                 key: 'id'
             }
         },
-        text: {
+        content: {
             type: DataTypes.TEXT,
             allowNull: false,
         }

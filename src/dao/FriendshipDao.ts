@@ -1,48 +1,31 @@
-import { Sequelize, Op } from 'sequelize';
-import { Friendship, FriendshipAttributes } from '../models/FriendshipModel';
+import { Friendship, FriendshipAttributes } from "../models/FriendshipModel"
 
 class FriendshipDAO {
-    private sequelize: Sequelize;
+  async createFriendRequest(data: FriendshipAttributes): Promise<Friendship> {
+    return Friendship.create(data);
+  }
 
-    constructor(sequelize: Sequelize) {
-        this.sequelize = sequelize;
-    }
+  async updateFriendshipStatus(
+    id: number,
+    status: "PENDING" | "ACCEPTED" | "DECLINED" | "BLOCKED"
+  ): Promise<[number]> {
+    return Friendship.update({ status }, { where: { id } });
+  }
 
-    async create(friendshipAttributes: FriendshipAttributes): Promise<Friendship> {
-        return await Friendship.create(friendshipAttributes);
-    }
+  async getFriendshipById(id: number): Promise<Friendship | null> {
+    return Friendship.findByPk(id);
+  }
 
-    async getById(id: number): Promise<Friendship | null> {
-        return await Friendship.findByPk(id);
-    }
+  async deleteFriendship(id: number): Promise<void> {
+    await Friendship.destroy({ where: { id } });
+  }
 
-    async getFriendshipsByUserId(userId: number): Promise<Friendship[]> {
-        return await Friendship.findAll({ 
-            where: { 
-                [Op.or]: [{ userId1: userId }, { userId2: userId }] 
-            }
-        });
-    }
-
-    async updateById(id: number, updates: Partial<FriendshipAttributes>): Promise<number> {
-        const [updatedRowsCount] = await Friendship.update(updates, { where: { id } });
-        return updatedRowsCount;
-    }
-
-    async deleteById(id: number): Promise<void> {
-        await Friendship.destroy({ where: { id } });
-    }
-
-    async checkFriendshipStatus(userId1: number, userId2: number): Promise<Friendship | null> {
-        return await Friendship.findOne({
-            where: {
-                [Op.or]: [
-                    { userId1: userId1, userId2: userId2 },
-                    { userId1: userId2, userId2: userId1 }
-                ]
-            }
-        });
-    }
+  // Example: Fetch friendships by status
+  async getFriendshipsByStatus(
+    status: "PENDING" | "ACCEPTED" | "DECLINED" | "BLOCKED"
+  ): Promise<Friendship[]> {
+    return Friendship.findAll({ where: { status } });
+  }
 }
 
-export default FriendshipDAO;
+export default new FriendshipDAO();
