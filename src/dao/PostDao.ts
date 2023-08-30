@@ -25,13 +25,27 @@ class PostDAO {
         return updatedRowsCount;
     }
 
-    async deleteById(id: number): Promise<void> {
-        await Post.destroy({ where: { id } });
+    async isOwner(postId: number, userId: number): Promise<boolean> {
+        const post = await this.getById(postId);
+        return post?.userId === userId;
+    }
+
+    async deleteById(id: number, userId: number, isAdmin: boolean = false): Promise<number> {
+        if (isAdmin) {
+            return await Post.destroy({ where: { id } });
+        } else {
+            return await Post.destroy({ where: { id, userId } });
+        }
     }
 
     async getAllPosts(): Promise<Post[]> {
-        return await Post.findAll();
+        try {
+            return await Post.findAll();
+        } catch (error: any) {
+            throw new Error(`Failed to fetch posts: ${error.message}`);
+        }
     }
+    
 }
 
 export default PostDAO;
