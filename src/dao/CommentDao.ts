@@ -27,7 +27,7 @@ class CommentDAO {
             where: { postId },
             include: [{ model: User,
             as: 'user',
-            attributes: ['id', 'username', 'email', 'role'] }] //  informasi user yang mengomentari
+            attributes: ['id', 'username', 'email', 'role'] }]
         });
     }
 

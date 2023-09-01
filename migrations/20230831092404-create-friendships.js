@@ -1,27 +1,25 @@
 'use strict';
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('friendships', {
       id: {
         type: Sequelize.INTEGER.UNSIGNED,
-        primaryKey: true,
         autoIncrement: true,
-        allowNull: false,
+        primaryKey: true,
       },
       requesterId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
-          model: 'users',
+          model: 'users', 
           key: 'id',
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       requesteeId: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'users',
@@ -36,22 +34,15 @@ module.exports = {
         defaultValue: 'PENDING',
       },
       createdAt: {
-        type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('NOW()'),
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
-        type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('NOW()'),
-      },
-    });
-
-    // Adding a unique constraint to avoid duplicate friend requests
-    await queryInterface.addConstraint('friendships', {
-      fields: ['requesterId', 'requesteeId'],
-      type: 'unique',
-      name: 'unique_friendship_constraint'
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+      }
     });
   },
 

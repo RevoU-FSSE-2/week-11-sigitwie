@@ -53,7 +53,7 @@ export const CommentFactory = (sequelize: Sequelize) => {
         timestamps: true,
     });
 
-    // Definisikan relasi dengan model lain
+    // Define associations with other models
     Comment.belongsTo(User, { foreignKey: 'userId', as: 'user' });
     Comment.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
 

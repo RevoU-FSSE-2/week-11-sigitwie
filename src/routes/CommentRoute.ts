@@ -6,18 +6,22 @@ import {
   updateComment,
   deleteComment,
 } from "../controllers/CommentController";
-import { verifyOwnershipOrAdmin, verifyUserIdentity } from '../middlewares/AuthorizationMiddleware';
-import  CommentDAO  from '../dao/CommentDao';
+import { verifyUserAuthorization } from '../middlewares/AuthorizationMiddleware';
+import CommentDAO from '../dao/CommentDao';
 import sequelize from "../utils/db";
 
 const commentRoutes = express.Router();
 const commentDAO = new CommentDAO(sequelize);
 
 
-commentRoutes.post("/create", verifyUserIdentity, createComment);
+commentRoutes.post("/create", verifyUserAuthorization({ actionIdentityKey: 'userId' }), createComment);
 commentRoutes.get("/:id", getCommentById);
 commentRoutes.get("/post/:postId", getCommentsByPostId);
-commentRoutes.put("/update/:id", verifyOwnershipOrAdmin(commentDAO, 'id'), updateComment);
-commentRoutes.delete("/delete/:id", verifyOwnershipOrAdmin(commentDAO, 'id'), deleteComment);
+
+// For updating a comment, both the action identity (from the comment's userId) and resource ownership checks are applied
+commentRoutes.put("/update/:id", verifyUserAuthorization({ resourceDAO: commentDAO, resourceIdParam: 'id' }), updateComment);
+
+// For deleting a comment, only the resource ownership check is applied
+commentRoutes.delete("/delete/:id", verifyUserAuthorization({ resourceDAO: commentDAO, resourceIdParam: 'id' }), deleteComment);
 
 export default commentRoutes;

@@ -109,7 +109,7 @@ export const deletePost = async (req: ExtendedRequest, res: Response) => {
 };
 
 const handleError = (error: any, res: Response) => {
-  console.error(error.message); // Log the error for debugging
+  console.error(error.message);
   return res
     .status(500)
     .json({ message: "Internal Server Error", error: error.message });

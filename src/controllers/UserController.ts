@@ -4,6 +4,7 @@ import UserDAO from "../dao/UserDao";
 import { generateToken, verifyToken } from "../utils/AuthService";
 import sequelize from "../utils/db";
 import { UserAttributes } from "../models/UserModel";
+import { ExtendedRequest } from "../utils/types";
 
 const userDao = new UserDAO(sequelize);
 
@@ -148,42 +149,20 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
     const updates = req.body as Partial<UserAttributes>;
 
-    // Decode JWT token to get the logged-in user's ID and role
-    const token = req.headers["authorization"]?.split(" ")[1];
-    if (!token) {
-      return res
-        .status(401)
-        .send({ message: "Authentication token not provided" });
-    }
-
-    const decoded = verifyToken(token);
-    const loggedInUserId = decoded.userId;
-    const loggedInUserRole = decoded.role;
-
-    if (loggedInUserRole !== "admin" && loggedInUserId !== userId) {
-      return res
-        .status(403)
-        .send({
-          message: "You do not have permission to update this user data",
-        });
-    }
-
-    // Periksa apakah username baru sudah digunakan oleh user lain
+    // Check if username is already in use
     if (updates.username) {
-      const userWithSameUsername = await userDao.getByUsername(
-        updates.username
-      );
+      const userWithSameUsername = await userDao.getByUsername(updates.username);
       if (userWithSameUsername && userWithSameUsername.id !== userId) {
         return res.status(400).send({ message: "Username already in use" });
       }
     }
 
-    // Periksa apakah email baru sudah digunakan oleh user lain
+    // Check if email is already in use
     if (updates.email) {
       const userWithSameEmail = await userDao.getByEmail(updates.email);
       if (userWithSameEmail && userWithSameEmail.id !== userId) {
@@ -191,7 +170,7 @@ export const updateUser = async (req: Request, res: Response) => {
       }
     }
 
-    // Jika mengubah password, hash yang baru
+    // Hashing new password
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
@@ -223,22 +202,12 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+
+export const deleteUser = async (req: ExtendedRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.id);
-
-    // Decode JWT token to get the logged-in user's ID and role
-    const token = req.headers["authorization"]?.split(" ")[1];
-    if (!token) {
-      return res
-        .status(401)
-        .send({ message: "Authentication token not provided" });
-    }
-
-    const decoded = verifyToken(token);
-
-    const loggedInUserId = decoded.userId;
-    const loggedInUserRole = decoded.role;
+    const loggedInUserId = req.userId;
+    const loggedInUserRole = req.userRole;
 
     // Ensure user exists
     const user = await userDao.getById(userId);
@@ -273,4 +242,5 @@ export const deleteUser = async (req: Request, res: Response) => {
       res.status(500).send({ message: "Failed to delete user" });
     }
   }
-};
+}
+

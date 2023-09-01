@@ -1,5 +1,5 @@
-import { User, UserAttributes } from '../models/UserModel'; // Path mungkin perlu diubah sesuai lokasi UserModel Anda
-import { Op, Sequelize } from 'sequelize';
+import { User, UserAttributes } from '../models/UserModel';
+import { Sequelize } from 'sequelize';
 
 class UserDAO {
     private sequelize: Sequelize;
@@ -10,6 +10,20 @@ class UserDAO {
 
     async create(userAttributes: UserAttributes): Promise<User> {
         return await User.create(userAttributes);
+    }
+
+    async userExists(userId: number): Promise<boolean> {
+        try {
+            const user = await User.findByPk(userId);
+            return !!user;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+    }
+
+    async isOwner(userId: number, loggedInUserId: number): Promise<boolean> {
+        return userId === loggedInUserId;
     }
 
     async getById(id: number): Promise<User | null> {
@@ -36,8 +50,6 @@ class UserDAO {
     async getAllUsers(): Promise<User[]> {
         return await User.findAll();
     }
-
-
 }
 
 export default UserDAO;

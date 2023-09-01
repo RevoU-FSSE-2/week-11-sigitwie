@@ -36,45 +36,57 @@ export const roleAuthorizationMiddleware = (allowedRoles: ('user' | 'admin')[]) 
     };
 };
 
-export const verifyUserIdentity =(req: ExtendedRequest, res: Response, next: NextFunction) => {
-    const loggedInUserId = req.userId;
-    const commentUserId = req.body.userId;
-
-    if (loggedInUserId !== commentUserId) {
-        return res.status(403).send({ message: "You are not authorized to comment as another user." });
-    }
-
-    next();
-};
-
-
 interface ResourceDAO {
     getById(id: number): Promise<any>;
     isOwner(resourceId: number, userId: number): Promise<boolean>;
 }
 
-export const verifyOwnershipOrAdmin = (resourceDAO: ResourceDAO, resourceIdParam: string) => {
+interface UserAuthorizationOptions {
+    actionIdentityKey?: string;
+    resourceDAO?: ResourceDAO;
+    resourceIdParam?: string;
+  }
+  
+  export const verifyUserAuthorization = ({
+    actionIdentityKey,
+    resourceDAO,
+    resourceIdParam
+  }: UserAuthorizationOptions) => {
     return async (req: ExtendedRequest, res: Response, next: NextFunction) => {
+      // If action identity is provided, verify it
+      if (actionIdentityKey) {
+        const loggedInUserId = req.userId;
+        const actionUserId = req.body[actionIdentityKey];
+        if (loggedInUserId !== actionUserId) {
+          return res.status(403).send({ message: `You are not authorized to perform this action as another user.` });
+        }
+      }
+  
+      // If resource verification is needed, verify resource ownership or admin
+      if (resourceDAO && resourceIdParam) {
         const resourceId = parseInt(req.params[resourceIdParam]);
         const loggedInUserId = req.userId;
-
+  
         // Ensure loggedInUserId is defined and is a number
         if (typeof loggedInUserId === 'undefined' || isNaN(loggedInUserId)) {
-            return res.status(401).send({ message: "User not authenticated or invalid userId" });
+          return res.status(401).send({ message: "User not authenticated or invalid userId" });
         }
-
+  
         // Ensure resource exists
         const resource = await resourceDAO.getById(resourceId);
         if (!resource) {
-            return res.status(404).send({ message: "Resource not found" });
+          return res.status(404).send({ message: "Resource not found" });
         }
-
+  
         // Check if user is allowed to access
         const isUserOwner = await resourceDAO.isOwner(resourceId, loggedInUserId);
         if (!isUserOwner && req.userRole !== "admin") {
-            return res.status(403).send({ message: "You do not have permission" });
+          return res.status(403).send({ message: "You do not have permission" });
         }
-
-        next();
+      }
+  
+      next();
     };
-};
+  };
+  
+  

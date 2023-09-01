@@ -1,7 +1,7 @@
 import sequelize from "./utils/db";
 import app from "./app";
 
-const PORT = 3000;
+const PORT = 3002;
 
 sequelize
   .authenticate()
